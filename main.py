@@ -7,6 +7,9 @@ from NeuralNetwork import pynn
 pygame.init()
 pygame.font.init()
 
+LOAD_FILE = "save.txt"
+SAVE_FILE = "save2.txt"
+
 CACTUS_HEIGHT = 100
 CACTUS_WIDTH = 28
 BIRD_BONUS = 50
@@ -14,6 +17,7 @@ WIDTH, HEIGHT = 1000, 400
 GROUND_HEIGHT = 100
 GRAVITY = 2684
 JUMP_VELOCITY = -1000
+SPEED = 1
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("dino game")
@@ -39,23 +43,23 @@ class obstacle:
             self.level = random.randint(0,3)
             self.extra_vel = (self.level-2)*BIRD_BONUS
             extra = random.randint(25, 50)
-            self.extra_vel = (self.extra_vel+extra) if abs(self.extra_vel+extra) > abs(self.extra_vel) else (self.extra_vel-extra)
+            self.extra_vel = 0#(self.extra_vel+extra) if abs(self.extra_vel+extra) > abs(self.extra_vel) else (self.extra_vel-extra)
             self.y = HEIGHT - GROUND_HEIGHT - self.height*(1+self.level) - 10*(2*self.level+1)
         elif self.type == 1:
-            self.height = 125
-            self.width = 32
+            self.height = 75
+            self.width = 30*random.randint(1,3)
             self.y = HEIGHT - GROUND_HEIGHT - self.height
             self.extra_vel = 0
         elif self.type == 2:
-            self.height = 75
-            self.width = 30*random.randint(1,3)
+            self.height = 125
+            self.width = 32
             self.y = HEIGHT - GROUND_HEIGHT - self.height
             self.extra_vel = 0
     def create_obstacle(self):
         return pygame.Rect(self.x,self.y,self.width, self.height)
 
 
-def draw(gen, players, ground, elapsed_time, cacti):
+def draw(gen:pynn.generation, players, ground, elapsed_time, cacti):
     WIN.blit(BG, (0, 0)) 
     for color, player in zip(gen.colors, players):
         if player is None:
@@ -66,11 +70,12 @@ def draw(gen, players, ground, elapsed_time, cacti):
     for cactus in cacti:
         pygame.draw.rect(WIN, (255,0,0), cactus.create_obstacle())
     time_passed = str(round(elapsed_time*10))
-    if not (5-len(time_passed) < 0):
-        time_text = FONT.render(f"SCORE: {"0"*(max(0,5-len(time_passed))) + time_passed}", 1, "white")
-    else:
-        time_text = FONT.render(f"SCORE: {random.randint(10000,99999)}", 1, "white") 
-    WIN.blit(time_text, (10, 10))
+    #if not (5-len(time_passed) < 0):
+    #    time_text = FONT.render(f"BEST SCORE: {'0'*(max(0,5-len(time_passed))) + time_passed}", 1, "white")
+    #else:
+    #    time_text = FONT.render(f"BEST SCORE: {random.randint(10000,99999)}", 1, "white") 
+    timmy = FONT.render(f"BEST SCORE: {-int(gen.get_best(get_loss=True))}", 1, "white") 
+    WIN.blit(timmy, (10, 10))
     pygame.display.update()  
 
 def main(gen:pynn.generation) :
@@ -87,8 +92,8 @@ def main(gen:pynn.generation) :
         start_time = time.time()
         CACTUS_VEL = 300
         elapsed_time = 0    
-        cactus_add_increment = 2000
         cactus_count = 0
+        cactus_add_increment = 2000
         cacti = []
         randomizer = -2000
         run = True
@@ -104,7 +109,7 @@ def main(gen:pynn.generation) :
                 if event.type == pygame.QUIT:
                     run = False
                     gen.set_best_wb()
-                    gen.save("save2.txt")
+                    gen.save(SAVE_FILE)
                     pygame.quit()
                     end = True
                     exit()
@@ -114,7 +119,7 @@ def main(gen:pynn.generation) :
                 pygame.display.update()
                 run = False
                 continue
-            delta_time = clock.tick(60) / 1000.0  
+            delta_time = clock.tick(60) / 1000.0 * SPEED
             cactus_count += delta_time * 1000
             CACTUS_VEL += delta_time * 10
             elapsed_time = time.time() - start_time
@@ -187,7 +192,7 @@ def main(gen:pynn.generation) :
                             if cactus.type != 0:
                                 network.loss += 100
                         elif player.y < cactus.y:
-                            network.loss -= 5
+                            network.loss -= 5 * cactus.type
             draw(gen, players, ground, elapsed_time, cacti)
         #print([layer.best_weights for layer in gen.networks[0].layers])
         #print([network.loss for network in gen.networks])
@@ -197,11 +202,11 @@ def main(gen:pynn.generation) :
 #==========================================================================
 if __name__ == "__main__":        
     #create Neural Network
-    n_inputs = 10 # y; speed; [distance to cactus; cactus height; cactus width; height] *2;
+    n_inputs = 14 # y; speed; [distance to cactus; cactus height; cactus width; height] *2;
     #NN = pynn.Neural_Network()
     #NN.create((14,8,8,1),[1,1,0])
-    #gen = pynn.generation(NN,50)
-    gen = pynn.load("save.txt")
+    #gen = pynn.generation(NN,100)
+    gen = pynn.load(LOAD_FILE)
     gen.mutate_gen(limit=1)
     #print(gen.networks[0].layers[0].weights)
     gen.colors = [(random.randint(100,255), random.randint(100,255), random.randint(100,255)) for _ in range(gen.size)] 
