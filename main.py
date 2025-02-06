@@ -7,7 +7,7 @@ from NeuralNetwork import pynn
 pygame.init()
 pygame.font.init()
 
-LOAD_FILE = "save.txt"
+LOAD_FILE = "save2.txt"
 SAVE_FILE = "save2.txt"
 
 CACTUS_HEIGHT = 100
@@ -40,7 +40,7 @@ class obstacle:
         if self.type == 0:
             self.width = 28
             self.height = 25
-            self.level = random.randint(0,3)
+            self.level = random.randint(0,2)
             self.extra_vel = (self.level-2)*BIRD_BONUS
             extra = random.randint(25, 50)
             self.extra_vel = 0#(self.extra_vel+extra) if abs(self.extra_vel+extra) > abs(self.extra_vel) else (self.extra_vel-extra)
@@ -108,7 +108,6 @@ def main(gen:pynn.generation) :
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
-                    gen.set_best_wb()
                     gen.save(SAVE_FILE)
                     pygame.quit()
                     end = True
