@@ -21,6 +21,8 @@ SPEED = 1
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("dino game")
+icon = pygame.image.load("./grey.jpg")
+pygame.display.set_icon(icon)
 BG = pygame.transform.scale(pygame.image.load("grey.jpg"), (WIDTH, HEIGHT))
 
 
